@@ -2,15 +2,14 @@ import pandas as pd
 import json
 import re
 import os
-import sys
 from datetime import datetime
 
 MAPEAMENTO_CAMPOS = {
-    "nomeCompleto": ["nome", "nome completo", "nome_completo", "nomecompleto"],
+    "nomeCompleto": ["nome", "nome completo", "nome_completo", "nomecompleto", "nome do aluno"],
     "email": ["email", "e-mail", "contato"],
     "cpf": ["cpf", "documento", "doc", "cpf_usuario"],
     "role": ["role", "tipo", "tipo_usuario", "perfil", "categoria", "função"],
-    "dataNascimento": ["data_nascimento", "nascimento", "data de nascimento"]
+    "dataNascimento": ["data_nascimento", "nascimento", "data de nascimento", "dt_nascimento", "dn"]
 }
 
 def normalizar_role(valor):
@@ -26,39 +25,46 @@ def normalizar_role(valor):
 def normalizar_data_nascimento(valor):
     if not valor or not str(valor).strip():
         return None
-    formatos = ["%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"]
+    formatos = ["%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%Y/%m/%d", "%d/%m/%y", "%d-%m-%y"]
     for formato in formatos:
         try:
             data = datetime.strptime(str(valor).strip(), formato)
             return data.strftime("%Y-%m-%d")
         except ValueError:
             continue
-    return None  
+    return None
 
-def encontrar_coluna(df, campo_padrao, colunas_alternativas, colunas_usadas):
-    for alt in colunas_alternativas:
+def encontrar_coluna(df, campo_padrao, sinonimos):
+    for alt in sinonimos:
         for coluna_df in df.columns:
-            if coluna_df.lower().strip() not in colunas_usadas and \
-               re.sub(r'\s+', '', coluna_df.strip().lower()) == re.sub(r'\s+', '', alt.strip().lower()):
-                colunas_usadas.add(coluna_df.lower().strip())
+            comparacao = re.sub(r'\s+', '', coluna_df.strip().lower()) == re.sub(r'\s+', '', alt.strip().lower())
+            if comparacao:
                 return coluna_df
     return None
 
 def extrair_dados_de_sql(caminho_sql):
     with open(caminho_sql, "r", encoding="utf-8") as f:
         conteudo = f.read()
+    
     matches = re.findall(r"INSERT INTO usuarios.*?VALUES\s*\((.*?)\);", conteudo, re.IGNORECASE)
     dados = []
+    
     for match in matches:
         campos = [c.strip().strip("'") for c in re.findall(r"'(.*?)'", match)]
-        if len(campos) == 4:
+        
+        if len(campos) == 5:
             dados.append({
-                "nome do aluno": campos[0],
-                "e-mail": campos[1],
-                "cpf_usuario": campos[2],
-                "tipo_usuario": campos[3]
+                "nome": campos[0],
+                "email": campos[1],
+                "cpf": campos[2],
+                "role": campos[3],
+                "nascimento": campos[4]
             })
+        else:
+            print(f"⚠️ Ignorado: {campos} (esperado 5 campos)")
+
     return pd.DataFrame(dados)
+
 
 def converter_arquivo_para_json(arquivo):
     extensao = os.path.splitext(arquivo)[1].lower()
@@ -78,19 +84,18 @@ def converter_arquivo_para_json(arquivo):
     else:
         raise ValueError("Formato de arquivo não suportado")
 
-    colunas_usadas = set()
     usuarios = []
     erros = []
 
     for _, row in df.iterrows():
         usuario = {}
         for campo_padrao, sinonimos in MAPEAMENTO_CAMPOS.items():
-            coluna = encontrar_coluna(df, campo_padrao, sinonimos, colunas_usadas)
+            coluna = encontrar_coluna(df, campo_padrao, sinonimos)
             if coluna:
                 valor = str(row[coluna]).strip() if pd.notna(row[coluna]) else None
                 if campo_padrao == "dataNascimento":
                     valor = normalizar_data_nascimento(valor)
-                if campo_padrao == "role":
+                elif campo_padrao == "role":
                     valor = normalizar_role(valor)
                 usuario[campo_padrao] = valor
 
@@ -111,11 +116,9 @@ def converter_arquivo_para_json(arquivo):
     return {"usuarios": usuarios, "erros": erros}
 
 if __name__ == "__main__":
+    import sys
     if len(sys.argv) != 2:
         print("❗ Uso: python converterArquivoAPI.py caminho/do/arquivo.csv|xlsx|json|sql")
     else:
-        caminho_arquivo = sys.argv[1]
-        try:
-            resultado = converter_arquivo_para_json(caminho_arquivo)
-        except Exception as e:
-            print(f"❌ Erro ao processar arquivo: {e}")
+        resultado = converter_arquivo_para_json(sys.argv[1])
+        print("Resultado:", resultado)
