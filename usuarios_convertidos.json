@@ -1,0 +1,107 @@
+[
+  {
+    "nomeCompleto": "Marcelo Souza",
+    "email": "caroline01@lima.net",
+    "cpf": "031.958.624-33",
+    "role": "ALUNO",
+    "dataNascimento": "1983-08-10"
+  },
+  {
+    "nomeCompleto": "Luiza Rocha",
+    "email": "kcaldeira@almeida.br",
+    "cpf": "479.358.602-38",
+    "role": "PROFESSOR",
+    "dataNascimento": "1989-05-02"
+  },
+  {
+    "nomeCompleto": "Leandro da Cruz",
+    "email": "ferreiraclara@hotmail.com",
+    "cpf": "814.657.903-57",
+    "role": "ALUNO",
+    "dataNascimento": "2005-03-08"
+  },
+  {
+    "nomeCompleto": "Pedro Lucas da Cruz",
+    "email": "nogueiravitor-hugo@bol.com.br",
+    "cpf": "784.905.231-50",
+    "role": "ALUNO",
+    "dataNascimento": "1983-01-13"
+  },
+  {
+    "nomeCompleto": "Benício Viana",
+    "email": "carlos-eduardo09@santos.com",
+    "cpf": "081.679.423-50",
+    "role": "PROFESSOR",
+    "dataNascimento": "1992-12-22"
+  },
+  {
+    "nomeCompleto": "Sr. Felipe da Mota",
+    "email": "bcunha@freitas.com",
+    "cpf": "781.054.632-53",
+    "role": "PROFESSOR",
+    "dataNascimento": "1984-11-23"
+  },
+  {
+    "nomeCompleto": "Laís da Conceição",
+    "email": "luiz-felipeteixeira@yahoo.com.br",
+    "cpf": "968.215.307-77",
+    "role": "ALUNO",
+    "dataNascimento": "1982-12-20"
+  },
+  {
+    "nomeCompleto": "Dr. Otávio Ferreira",
+    "email": "hteixeira@cardoso.org",
+    "cpf": "953.806.174-84",
+    "role": "ALUNO",
+    "dataNascimento": "1987-02-28"
+  },
+  {
+    "nomeCompleto": "Lorena Vieira",
+    "email": "emanuelly96@viana.org",
+    "cpf": "657.430.192-07",
+    "role": "ALUNO",
+    "dataNascimento": "1990-09-28"
+  },
+  {
+    "nomeCompleto": "João Miguel Freitas",
+    "email": "igor55@hotmail.com",
+    "cpf": "412.958.637-82",
+    "role": "ALUNO",
+    "dataNascimento": "1988-06-03"
+  },
+  {
+    "nomeCompleto": "Olivia das Neves",
+    "email": "diasbernardo@yahoo.com.br",
+    "cpf": "641.782.953-73",
+    "role": "ALUNO",
+    "dataNascimento": "1992-09-12"
+  },
+  {
+    "nomeCompleto": "Maria Julia Ribeiro",
+    "email": "moliveira@castro.br",
+    "cpf": "568.390.471-48",
+    "role": "ALUNO",
+    "dataNascimento": "2004-01-06"
+  },
+  {
+    "nomeCompleto": "Ana Sophia Araújo",
+    "email": "levicunha@ig.com.br",
+    "cpf": "189.430.652-05",
+    "role": "ALUNO",
+    "dataNascimento": "1987-02-26"
+  },
+  {
+    "nomeCompleto": "Maria Araújo",
+    "email": "cdas-neves@almeida.com",
+    "cpf": "654.192.038-98",
+    "role": "ALUNO",
+    "dataNascimento": "1982-07-12"
+  },
+  {
+    "nomeCompleto": "Nicolas Vieira",
+    "email": "andrecardoso@dias.com",
+    "cpf": "513.297.860-68",
+    "role": "ALUNO",
+    "dataNascimento": "2003-11-07"
+  }
+]
