@@ -33,7 +33,7 @@ def normalizar_data_nascimento(valor):
             return data.strftime("%Y-%m-%d")
         except ValueError:
             continue
-    return None
+    return None  
 
 def encontrar_coluna(df, campo_padrao, colunas_alternativas, colunas_usadas):
     for alt in colunas_alternativas:
@@ -102,7 +102,6 @@ def converter_arquivo_para_json(arquivo):
                 if not usuario.get(campo):
                     motivos.append(f"Campo '{campo}' ausente ou inválido")
             erros.append({"usuario": usuario, "motivos": motivos})
-
 
     with open("usuarios_convertidos.json", "w", encoding="utf-8") as f:
         json.dump(usuarios, f, indent=2, ensure_ascii=False)
