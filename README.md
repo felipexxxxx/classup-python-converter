@@ -51,7 +51,7 @@ Esta API funciona como um **microserviço auxiliar**, sendo chamada diretamente 
 ## 🔄 Fluxo Ilustrado
 
 ```
-  Frontend (Admin)
+  Frontend 
       ↓
 API Flask (Conversão)
       ↓
