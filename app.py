@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
@@ -21,7 +20,7 @@ def converter():
     file.save(caminho)
 
     try:
-        usuarios = converter_arquivo_para_json(caminho)  # retorna lista de usuários
+        usuarios = converter_arquivo_para_json(caminho) 
         return jsonify(usuarios), 200
     except Exception as e:
         return jsonify({"erro": str(e)}), 500

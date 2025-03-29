@@ -97,7 +97,12 @@ def converter_arquivo_para_json(arquivo):
         if all(usuario.get(campo) for campo in ["nomeCompleto", "email", "cpf", "role", "dataNascimento"]):
             usuarios.append(usuario)
         else:
-            erros.append(usuario)
+            motivos = []
+            for campo in ["nomeCompleto", "email", "cpf", "role", "dataNascimento"]:
+                if not usuario.get(campo):
+                    motivos.append(f"Campo '{campo}' ausente ou inválido")
+    erros.append({"usuario": usuario, "motivos": motivos})
+
 
     with open("usuarios_convertidos.json", "w", encoding="utf-8") as f:
         json.dump(usuarios, f, indent=2, ensure_ascii=False)
