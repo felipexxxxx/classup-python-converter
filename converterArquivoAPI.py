@@ -2,15 +2,25 @@ import pandas as pd
 import json
 import re
 import os
+import unicodedata
 from datetime import datetime
 
 MAPEAMENTO_CAMPOS = {
-    "nomeCompleto": ["nome", "nome completo", "nome_completo", "nomecompleto", "nome do aluno"],
+    "nomeCompleto": ["nome", "nome completo", "nome_completo", "nomecompleto"],
     "email": ["email", "e-mail", "contato"],
     "cpf": ["cpf", "documento", "doc", "cpf_usuario"],
     "role": ["role", "tipo", "tipo_usuario", "perfil", "categoria", "função"],
-    "dataNascimento": ["data_nascimento", "nascimento", "data de nascimento", "dt_nascimento", "dn"]
+    "dataNascimento": ["dataNascimento", "datanascimento", "data_nascimento", "nascimento", "data de nascimento"]
 }
+
+def normalizar_texto(texto):
+    if not texto:
+        return ""
+    texto = str(texto).strip().lower()
+    texto = unicodedata.normalize("NFKD", texto)
+    texto = "".join(c for c in texto if not unicodedata.combining(c))
+    texto = re.sub(r'[^a-z0-9]', '', texto)
+    return texto
 
 def normalizar_role(valor):
     if not valor:
@@ -36,22 +46,23 @@ def normalizar_data_nascimento(valor):
 
 def encontrar_coluna(df, campo_padrao, sinonimos):
     for alt in sinonimos:
+        alt_norm = normalizar_texto(alt)
         for coluna_df in df.columns:
-            comparacao = re.sub(r'\s+', '', coluna_df.strip().lower()) == re.sub(r'\s+', '', alt.strip().lower())
-            if comparacao:
+            col_norm = normalizar_texto(coluna_df)
+            if col_norm == alt_norm:
                 return coluna_df
     return None
 
 def extrair_dados_de_sql(caminho_sql):
     with open(caminho_sql, "r", encoding="utf-8") as f:
         conteudo = f.read()
-    
+
     matches = re.findall(r"INSERT INTO usuarios.*?VALUES\s*\((.*?)\);", conteudo, re.IGNORECASE)
     dados = []
-    
+
     for match in matches:
         campos = [c.strip().strip("'") for c in re.findall(r"'(.*?)'", match)]
-        
+
         if len(campos) == 5:
             dados.append({
                 "nome": campos[0],
@@ -60,11 +71,8 @@ def extrair_dados_de_sql(caminho_sql):
                 "role": campos[3],
                 "nascimento": campos[4]
             })
-        else:
-            print(f"⚠️ Ignorado: {campos} (esperado 5 campos)")
 
     return pd.DataFrame(dados)
-
 
 def converter_arquivo_para_json(arquivo):
     extensao = os.path.splitext(arquivo)[1].lower()
@@ -84,28 +92,30 @@ def converter_arquivo_para_json(arquivo):
     else:
         raise ValueError("Formato de arquivo não suportado")
 
+    mapeamento = {
+        campo: encontrar_coluna(df, campo, sinonimos)
+        for campo, sinonimos in MAPEAMENTO_CAMPOS.items()
+    }
+
     usuarios = []
     erros = []
 
     for _, row in df.iterrows():
         usuario = {}
-        for campo_padrao, sinonimos in MAPEAMENTO_CAMPOS.items():
-            coluna = encontrar_coluna(df, campo_padrao, sinonimos)
-            if coluna:
-                valor = str(row[coluna]).strip() if pd.notna(row[coluna]) else None
-                if campo_padrao == "dataNascimento":
+        for campo, coluna in mapeamento.items():
+            valor = None
+            if coluna and coluna in row and pd.notna(row[coluna]):
+                valor = str(row[coluna]).strip()
+                if campo == "dataNascimento":
                     valor = normalizar_data_nascimento(valor)
-                elif campo_padrao == "role":
+                elif campo == "role":
                     valor = normalizar_role(valor)
-                usuario[campo_padrao] = valor
+            usuario[campo] = valor
 
-        if all(usuario.get(campo) for campo in ["nomeCompleto", "email", "cpf", "role", "dataNascimento"]):
+        if all(usuario.get(campo) for campo in MAPEAMENTO_CAMPOS):
             usuarios.append(usuario)
         else:
-            motivos = []
-            for campo in ["nomeCompleto", "email", "cpf", "role", "dataNascimento"]:
-                if not usuario.get(campo):
-                    motivos.append(f"Campo '{campo}' ausente ou inválido")
+            motivos = [f"Campo '{campo}' ausente ou inválido" for campo in MAPEAMENTO_CAMPOS if not usuario.get(campo)]
             erros.append({"usuario": usuario, "motivos": motivos})
 
     with open("usuarios_convertidos.json", "w", encoding="utf-8") as f:
@@ -120,5 +130,4 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("❗ Uso: python converterArquivoAPI.py caminho/do/arquivo.csv|xlsx|json|sql")
     else:
-        resultado = converter_arquivo_para_json(sys.argv[1])
-        print("Resultado:", resultado)
+        converter_arquivo_para_json(sys.argv[1])
