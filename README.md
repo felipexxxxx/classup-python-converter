@@ -1,12 +1,13 @@
+
 # 🐍 ClassUP Converter API (Python + Flask)
 
-API auxiliar em **Python + Flask** usada pela aplicação [ClassUP](https://github.com/felipexxxxx/classup) para converter arquivos de usuários em formatos como `.csv`, `.json`, `.sql` ou `.xlsx` em um JSON padronizado compatível com o backend Java.
+API auxiliar desenvolvida em **Python + Flask** usada pela aplicação [ClassUP](https://github.com/felipexxxxx/AgendaEdu-Frontend) para **converter arquivos de usuários** (`.csv`, `.json`, `.sql`, `.xlsx`) em um **JSON padronizado** compatível com o backend Java.
 
 ---
 
 ## 🎯 Objetivo
 
-Permitir que administradores da plataforma façam **upload de arquivos com dados de alunos e professores**, para que sejam automaticamente convertidos para o formato necessário para importação no sistema ClassUP.
+Permitir que **administradores da plataforma** façam upload de arquivos contendo dados de alunos e professores, para que sejam automaticamente convertidos para o formato esperado pela API Java da aplicação ClassUP.
 
 ---
 
@@ -15,9 +16,9 @@ Permitir que administradores da plataforma façam **upload de arquivos com dados
 - `.csv`
 - `.json`
 - `.xlsx` / `.xls`
-- `.sql` com inserts no padrão:
+- `.sql` com comandos `INSERT INTO` no padrão:
 
-```
+```sql
 INSERT INTO usuarios (...) VALUES ('Nome', 'Email', 'CPF', 'Tipo');
 ```
 
@@ -25,40 +26,40 @@ INSERT INTO usuarios (...) VALUES ('Nome', 'Email', 'CPF', 'Tipo');
 
 ## 📂 Estrutura do Projeto
 
-```
+```bash
 📁 classup-converter-api/
-├── app.py                  # API Flask principal
-├── converterArquivoAPI.py  # Lógica de conversão
-├── uploads/                # Diretório temporário para uploads
+├── app.py                  # API principal em Flask
+├── converterArquivoAPI.py  # Lógica de conversão de arquivos
+├── uploads/                # Diretório temporário para arquivos enviados
 ├── requirements.txt        # Dependências do projeto
+├── Procfile                # Configuração para deploy no Railway
 ```
 
 ---
 
-## ⚙️ Funcionalidade
+## ⚙️ Funcionamento da API
 
-Esta API funciona como um **serviço externo** para o frontend da aplicação. O fluxo é:
+Esta API funciona como um **microserviço auxiliar**, sendo chamada diretamente pelo frontend do ClassUP. O fluxo completo:
 
-1. O **administrador** faz upload de um arquivo.
-2. O frontend envia esse arquivo para esta API Python.
-3. A API converte os dados e retorna um JSON padronizado.
-4. O frontend envia esse JSON ao backend Java para registrar os usuários.
+1. O **administrador** faz upload de um arquivo pelo frontend.
+2. O frontend envia o arquivo para a API Python (Flask).
+3. A API processa o conteúdo e retorna um **JSON estruturado**.
+4. O frontend envia esse JSON para o backend Java da aplicação.
 
 ---
 
 ## 🔄 Fluxo Ilustrado
 
 ```
-      Front 
-        ↓
-Python Flask (converter)
-        ↓
-JSON formatado
-        ↓
-      Front 
-        ↓  
-Java Spring Boot (importar)
-
+  Frontend (Admin)
+      ↓
+API Flask (Conversão)
+      ↓
+ JSON padronizado
+      ↓
+  Frontend 
+      ↓
+Backend Java (Cadastro)
 ```
 
 ---
@@ -95,7 +96,7 @@ cd classup-converter-api
 
 # 2. Crie e ative o ambiente virtual
 python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+source venv/bin/activate   # No Windows: venv\Scripts\activate
 
 # 3. Instale as dependências
 pip install -r requirements.txt
@@ -104,36 +105,49 @@ pip install -r requirements.txt
 python app.py
 ```
 
-A aplicação ficará disponível em: [http://localhost:5000](http://localhost:5000)
+A API estará disponível em: [http://localhost:5000](http://localhost:5000)
 
 ---
 
-## 🌐 Endpoints
+## 🌐 Endpoint
 
 ### `POST /converterJson`
 
-Converte um arquivo para JSON formatado para o backend Java.
+Converte um arquivo enviado para JSON padronizado para o backend Java.
 
 #### Requisição:
 - Tipo: `multipart/form-data`
 - Campo: `file`
-
-#### Resposta:
-- `200 OK` com lista de usuários
-- `400 Bad Request` se nenhum arquivo for enviado
-- `500 Internal Server Error` em caso de falha na conversão
-
+- 
 ---
 
 ## 🔓 CORS
 
-Ajuste o CORS para aceitar requisições de qualquer origem.
+A API já vem configurada com CORS para aceitar chamadas do frontend:
 
 ```python
-CORS(app)
+CORS(app, origins=["https://classup-web.netlify.app", "http://localhost:5173"])
 ```
 
+---
 
+## 🧩 Dependências Principais
+
+As bibliotecas usadas neste projeto estão listadas em `requirements.txt`. As principais são:
+
+- **Flask**: microframework web para construção da API.
+- **flask-cors**: para permitir requisições entre frontend e backend.
+- **pandas**: manipulação de dados tabulares de arquivos como `.csv` e `.xlsx`.
+- **openpyxl**: suporte à leitura de arquivos Excel.
+- **gunicorn**: servidor WSGI usado para deploy em produção (ex: Railway).
+
+Para instalar todas as dependências:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
 
 ## 📜 Licença
 
