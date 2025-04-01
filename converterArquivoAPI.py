@@ -3,7 +3,7 @@ import json
 import re
 import os
 import unicodedata
-from datetime import datetime
+from dateutil import parser
 
 MAPEAMENTO_CAMPOS = {
     "nomeCompleto": ["nome", "nome completo", "nome_completo", "nomecompleto"],
@@ -33,16 +33,16 @@ def normalizar_role(valor):
     return None
 
 def normalizar_data_nascimento(valor):
-    if not valor or not str(valor).strip():
+    if pd.isna(valor):
         return None
-    formatos = ["%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%Y/%m/%d", "%d/%m/%y", "%d-%m-%y"]
-    for formato in formatos:
-        try:
-            data = datetime.strptime(str(valor).strip(), formato)
-            return data.strftime("%Y-%m-%d")
-        except ValueError:
-            continue
-    return None
+
+    try:
+        data = parser.parse(str(valor), dayfirst=True, fuzzy=True)
+        return data.strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return None
+
+
 
 def encontrar_coluna(df, campo_padrao, sinonimos):
     for alt in sinonimos:
@@ -76,10 +76,13 @@ def extrair_dados_de_sql(caminho_sql):
 
 def converter_arquivo_para_json(arquivo):
     extensao = os.path.splitext(arquivo)[1].lower()
+
     if extensao == ".csv":
         df = pd.read_csv(arquivo)
+
     elif extensao in [".xlsx", ".xls"]:
-        df = pd.read_excel(arquivo)
+        df = pd.read_excel(arquivo)  # sem dtype=str, porque não funciona para células "Data"
+
     elif extensao == ".json":
         try:
             df = pd.read_json(arquivo)
@@ -87,15 +90,23 @@ def converter_arquivo_para_json(arquivo):
             with open(arquivo, "r", encoding="utf-8") as f:
                 data = json.load(f)
             df = pd.json_normalize(data)
+
     elif extensao == ".sql":
         df = extrair_dados_de_sql(arquivo)
+
     else:
         raise ValueError("Formato de arquivo não suportado")
+
+    df = df.astype(str)
 
     mapeamento = {
         campo: encontrar_coluna(df, campo, sinonimos)
         for campo, sinonimos in MAPEAMENTO_CAMPOS.items()
     }
+
+    col_data = mapeamento.get("dataNascimento")
+    if col_data and col_data in df.columns:
+        df[col_data] = df[col_data].apply(normalizar_data_nascimento)
 
     usuarios = []
     erros = []
@@ -106,9 +117,7 @@ def converter_arquivo_para_json(arquivo):
             valor = None
             if coluna and coluna in row and pd.notna(row[coluna]):
                 valor = str(row[coluna]).strip()
-                if campo == "dataNascimento":
-                    valor = normalizar_data_nascimento(valor)
-                elif campo == "role":
+                if campo == "role":
                     valor = normalizar_role(valor)
             usuario[campo] = valor
 
@@ -124,6 +133,7 @@ def converter_arquivo_para_json(arquivo):
     print(f"\n✅ {len(usuarios)} usuários convertidos com sucesso!")
     print(f"⚠️ {len(erros)} registros ignorados.")
     return {"usuarios": usuarios, "erros": erros}
+
 
 if __name__ == "__main__":
     import sys
